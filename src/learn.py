@@ -13,20 +13,28 @@ with open(header_file, 'r') as f:
     headers = csv.reader(f).next()
 
 # Load data from files
-data_files = ['/Users/moon/Downloads/X1940.csv', '/Users/moon/Downloads/X2016.csv']
+data_files = ['/Users/moon/Downloads/X1940.csv'] #['/Users/moon/Downloads/X1940.csv', '/Users/moon/Downloads/X2016.csv']
 data = h2o.import_file(data_files)
 
 # Rename data frame columns
 for col, name in enumerate(headers):
     data.set_name(col, name)
-        
+
+dates = h2o.H2OFrame.mktime(year=data['Year'].asnumeric(),
+                            month=data['MonthDay']//100,
+                            day=data['MonthDay']%100,
+                            hour=12)
+dates.set_name(0, "Date")
+data = data.cbind(dates)
+
 print data[:4,:]
+exit()
 
 # Generate train set and validation set
 [train, val, test] = data.split_frame([0.7, 0.2])
 
 # Train models
-feature_list = ['Year', 'Station']
+feature_list = ['Date', 'Station']
 model = H2ORandomForestEstimator()
 model.train(feature_list, 'temp', train, validation_frame=val)
 
