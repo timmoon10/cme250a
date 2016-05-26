@@ -28,5 +28,5 @@ data_raw[data_raw['dewpoint']>9999,'dewpoint'] = None
 
 
 
-for i in range(0,len(data_raw.columns)):
-	data_raw[i].summary()
+# for i in range(0,len(data_raw.columns)):
+# 	data_raw[i].summary()
