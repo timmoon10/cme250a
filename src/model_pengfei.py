@@ -7,9 +7,6 @@ mixed_files = ['/Users/Pengfei/Documents/data/Xheader.csv','/Users/Pengfei/Docum
 # Initialize H2O
 h2o.init()
 
-# Load headers from file
-with open(header_file, 'r') as f:
-    headers = csv.reader(f).next()
 
 # Load data from files
 data_raw = h2o.import_file(mixed_files)
@@ -25,6 +22,8 @@ data_raw[data_raw['visibility']>999,'visibility'] = None
 data_raw[data_raw['station pres']>9999,'station pres'] = None
 data_raw[data_raw['sea level pres']>9999,'sea level pres'] = None
 data_raw[data_raw['dewpoint']>9999,'dewpoint'] = None
+
+data_raw['date']=data_raw['Year']*10000+data_raw['MonthDay']
 
 
 
