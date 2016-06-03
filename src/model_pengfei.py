@@ -48,8 +48,6 @@ data = data.cbind(months)
 data = data.cbind(days)
 data = data.drop('MonthDay')
 
-
-
 # Remove entries with missing temperature data
 data[data['temp']>9999,'temp'] = None
 
@@ -69,7 +67,7 @@ data[data['snow depth']>999,'snow depth'] = 0
 # Generate train set and validation set
 [train, val, test] = data.split_frame([0.7, 0.2])
 
-# Train model
+# set chosen feature
 feature_list = list(data.names)
 feature_list.remove('temp')
 feature_list.remove('max temp')
@@ -95,3 +93,27 @@ gbm_model.scoring_history()
 glm_model = h2o.estimators.glm.H2OGeneralizedLinearEstimator(model_id='glm1',nfolds=4)
 glm_model.train(y = "temp", x = feature_list, training_frame = train, validation_frame = val)
 glm_model.mse(train=True, valid=True, xval=True)
+
+
+#try grid search
+from h2o.grid.grid_search import H2OGridSearch
+#try grid search, using validation set
+hyper_parameters = {'ntrees':[100], 'max_depth':[3,5,7,9,11], 'learn_rate':[0.01,0.05,0.1,0.25]}
+gs = H2OGridSearch(h2o.estimators.gbm.H2OGradientBoostingEstimator(distribution='gaussian'), hyper_params=hyper_parameters)
+gs.train(y = "temp", x = feature_list, training_frame = train, validation_frame = val)
+gs.show() #rank by validation error
+
+
+#try grid search, using CV
+hyper_parameters = {'ntrees':[50], 'max_depth':[3,5,7,10], 'learn_rate':[0.01,0.05,0.25]}
+gs = H2OGridSearch(h2o.estimators.gbm.H2OGradientBoostingEstimator(distribution='gaussian',nfolds=3), hyper_params=hyper_parameters)
+gs.train(y = "temp", x = feature_list, training_frame = train, validation_frame = val)
+gs.show() #rank by CV error
+
+
+
+
+
+
+
+
