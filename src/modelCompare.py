@@ -3,8 +3,9 @@ import h2o
 header_file = '/Users/Pengfei/Documents/data/Xheader.csv'
 data_files = ['/Users/Pengfei/Documents/data/X2015.csv', '/Users/Pengfei/Documents/data/X2016.csv']
 mixed_files = ['/Users/Pengfei/Documents/data/Xheader.csv','/Users/Pengfei/Documents/data/X2015.csv', '/Users/Pengfei/Documents/data/X2016.csv']
-file1 = ['/Users/Pengfei/Documents/data/Xheader.csv','/Users/Pengfei/Documents/data/X1940.csv']
+# file1 = ['/Users/Pengfei/Documents/data/Xheader.csv','/Users/Pengfei/Documents/data/X1940.csv']
 # file2 = ['/Users/Pengfei/Documents/data/Xheader.csv','/Users/Pengfei/Documents/data/X2016.csv']
+file1 = ['D:\\Document\\data\\Xheader.csv', 'D:\\Document\\data\\X2016.csv']
 
 # Initialize H2O
 h2o.init()
@@ -65,7 +66,7 @@ data[data['precipitation']>99,'precipitation'] = 0
 data[data['snow depth']>999,'snow depth'] = 0
 
 # Generate train set and validation set
-[train, val, test] = data.split_frame([0.7, 0.3])
+[train, val, test] = data.split_frame([0.7, 0.29])
 
 # set chosen feature
 feature_list = list(data.names)
@@ -100,5 +101,3 @@ glm.mse(train=True, valid=True)
 for keys,values in rf.params.items():
     print(keys)
     print(values)
-
-
