@@ -76,17 +76,22 @@ feature_list.remove('max temp')
 feature_list.remove('min temp')
 
 #specify model detail
-gbm_model = h2o.estimators.gbm.H2OGradientBoostingEstimator(model_id='test1', distribution='gaussian')
+gbm_model = h2o.estimators.gbm.H2OGradientBoostingEstimator(model_id='gbm1', distribution='gaussian',nfolds=4)
 #train model
 gbm_model.train(y = "temp", x = feature_list, training_frame = train, validation_frame = val)
 #predict on test data set
 predicted_result = gbm_model.predict(test)
 #calculate mse for both train and valid data
-gbm_model.mse(train=True, valid=True)
-#plot mse error for training data
+gbm_model.mse(train=True, valid=True, xval=True)
+#plot mse error history for training and validation data
 gbm_model.plot()
 #report performance of train validation and test ????usage
 gbm_model.model_performance(test_data = test, train = True, valid = True)
 #list of score history
 gbm_model.scoring_history()
 
+
+#try cross validation framework
+glm_model = h2o.estimators.glm.H2OGeneralizedLinearEstimator(model_id='glm1',nfolds=4)
+glm_model.train(y = "temp", x = feature_list, training_frame = train, validation_frame = val)
+glm_model.mse(train=True, valid=True, xval=True)
