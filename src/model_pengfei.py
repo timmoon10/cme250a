@@ -112,8 +112,10 @@ gs.show() #rank by CV error
 
 
 
-
-
+#retrive model parameters
+# for keys,values in rf.params.items():
+#     print(keys)
+#     print(values)
 
 
 
