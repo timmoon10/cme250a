@@ -1,14 +1,17 @@
 import csv
 import h2o
 import sys
+orig_stdout = sys.stdout
 
-filepath = '/Users/Pengfei/Documents/data/'
+# filepath = '/Users/Pengfei/Documents/data/'
+filepath = 's3n://stanford-cme250a/weather/data/'
 filelist =[ filepath+'Xheader.csv' ]
-for year in range(1940,1941):
+for year in range(1940,2017):
 	filelist.append(filepath+'X'+str(year)+'.csv')
 
 # Initialize H2O
-h2o.init()
+# h2o.init()
+h2o.init(ip="localhost",port=55555,strict_version_check=False)
 
 # Load data from files
 data = h2o.import_file(filelist)
@@ -51,7 +54,7 @@ data = data.drop('MonthDay')
 
 # Remove entries with missing temperature data
 data[data['temp']>9999,'temp'] = None
-data = data.na_omit()
+# data = data.na_omit()
 
 # Remove missing data
 data[data['dewpoint']>9999,'dewpoint'] = None
@@ -79,47 +82,69 @@ feature_list.remove('min temp')
 
 
 # Training Models
-gbm = h2o.estimators.gbm.H2OGradientBoostingEstimator(model_id='gbm1', distribution='gaussian')
-gbm.train(y = "temp", x = feature_list, training_frame = train, validation_frame = val)
+
+glm = h2o.estimators.glm.H2OGeneralizedLinearEstimator(model_id='glm1')
+glm.train(y = "temp", x = feature_list, training_frame = train, validation_frame = val)
+orig_stdout = sys.stdout
 outputFile = open('log.txt', 'a')
 sys.stdout = outputFile
-print "==== Gradient Boosting ===="
+print "================================ Generalized Linear Model ================================"
+print glm
+outputFile.close()
+sys.stdout = orig_stdout
+
+gbm = h2o.estimators.gbm.H2OGradientBoostingEstimator(model_id='gbm1', distribution='gaussian')
+gbm.train(y = "temp", x = feature_list, training_frame = train, validation_frame = val)
+orig_stdout = sys.stdout
+outputFile = open('log.txt', 'a')
+sys.stdout = outputFile
+print "================================ Gradient Boosting ================================"
 print gbm
 outputFile.close()
+sys.stdout = orig_stdout
+
+# Try grid search
+from h2o.grid.grid_search import H2OGridSearch
+hyper_parameters = {'ntrees':[50], 'max_depth':[3,5], 'learn_rate':[0.01,0.1,0.05]}
+gs = H2OGridSearch(h2o.estimators.gbm.H2OGradientBoostingEstimator(distribution='gaussian'), hyper_params=hyper_parameters)
+gs.train(y = "temp", x = feature_list, training_frame = train, validation_frame = val)
+orig_stdout = sys.stdout
+outputFile = open('log.txt', 'a')
+sys.stdout = outputFile
+print "================================ grid search ================================"
+print gs
+outputFile.close()
+sys.stdout = orig_stdout
 
 rf = h2o.estimators.random_forest.H2ORandomForestEstimator(model_id='rf1')
 rf.train(y = "temp", x = feature_list, training_frame = train, validation_frame = val)
+orig_stdout = sys.stdout
 outputFile = open('log.txt', 'a')
 sys.stdout = outputFile
-print "==== Random Forest ===="
+print "================================ Random Forest ================================"
 print rf
 outputFile.close()
+sys.stdout = orig_stdout
 
 #deep learning is extremely slow, might not include it in the big data version
 dl = h2o.estimators.deeplearning.H2ODeepLearningEstimator(model_id='dl1')
 dl.train(y = "temp", x = feature_list, training_frame = train, validation_frame = val)
+orig_stdout = sys.stdout
 outputFile = open('log.txt', 'a')
 sys.stdout = outputFile
-print "==== Deep Learning ===="
+print "================================ Deep Learning ================================"
 print dl
 outputFile.close()
+sys.stdout = orig_stdout
+
+# data=h2o.get_frame('Xheader.hex');
+# glm2 = h2o.h2o.get_model('glm-37c7dbc7-c3a0-4c48-8dd7-693e9a4c9cfe')
+# orig_stdout = sys.stdout
+# outputFile = open('log.txt', 'a')
+# sys.stdout = outputFile
+# print "================================ Generalized Linear Model ================================"
+# print h2o.model.model_base.ModelBase.coef(glm2)
+# outputFile.close()
+# sys.stdout = orig_stdout
 
 
-glm = h2o.estimators.glm.H2OGeneralizedLinearEstimator(model_id='glm1')
-glm.train(y = "temp", x = feature_list, training_frame = train, validation_frame = val)
-outputFile = open('log.txt', 'a')
-sys.stdout = outputFile
-print "==== Generalized Linear Model ===="
-print glm
-outputFile.close()
-
-# Try grid search
-from h2o.grid.grid_search import H2OGridSearch
-hyper_parameters = {'ntrees':[50], 'max_depth':[3,5,8], 'learn_rate':[0.01,0.1,0.05]}
-gs = H2OGridSearch(h2o.estimators.gbm.H2OGradientBoostingEstimator(distribution='gaussian'), hyper_params=hyper_parameters)
-gs.train(y = "temp", x = feature_list, training_frame = train, validation_frame = val)
-outputFile = open('log.txt', 'a')
-sys.stdout = outputFile
-print "==== grid search ===="
-print gs
-outputFile.close()
