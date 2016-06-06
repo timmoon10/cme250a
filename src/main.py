@@ -1,9 +1,10 @@
 import csv
 import h2o
+import sys
 
 filepath = '/Users/Pengfei/Documents/data/'
 filelist =[ filepath+'Xheader.csv' ]
-for year in range(2015,2017):
+for year in range(1940,1941):
 	filelist.append(filepath+'X'+str(year)+'.csv')
 
 # Initialize H2O
@@ -80,29 +81,45 @@ feature_list.remove('min temp')
 # Training Models
 gbm = h2o.estimators.gbm.H2OGradientBoostingEstimator(model_id='gbm1', distribution='gaussian')
 gbm.train(y = "temp", x = feature_list, training_frame = train, validation_frame = val)
+outputFile = open('log.txt', 'a')
+sys.stdout = outputFile
 print "==== Gradient Boosting ===="
 print gbm
+outputFile.close()
 
 rf = h2o.estimators.random_forest.H2ORandomForestEstimator(model_id='rf1')
 rf.train(y = "temp", x = feature_list, training_frame = train, validation_frame = val)
+outputFile = open('log.txt', 'a')
+sys.stdout = outputFile
 print "==== Random Forest ===="
 print rf
-
+outputFile.close()
 
 #deep learning is extremely slow, might not include it in the big data version
 dl = h2o.estimators.deeplearning.H2ODeepLearningEstimator(model_id='dl1')
 dl.train(y = "temp", x = feature_list, training_frame = train, validation_frame = val)
+outputFile = open('log.txt', 'a')
+sys.stdout = outputFile
 print "==== Deep Learning ===="
 print dl
+outputFile.close()
+
 
 glm = h2o.estimators.glm.H2OGeneralizedLinearEstimator(model_id='glm1')
 glm.train(y = "temp", x = feature_list, training_frame = train, validation_frame = val)
+outputFile = open('log.txt', 'a')
+sys.stdout = outputFile
 print "==== Generalized Linear Model ===="
 print glm
+outputFile.close()
 
 # Try grid search
 from h2o.grid.grid_search import H2OGridSearch
-hyper_parameters = {'ntrees':[50], 'max_depth':[3,5,7,9,11], 'learn_rate':[0.01,0.05,0.1,0.25]}
+hyper_parameters = {'ntrees':[50], 'max_depth':[3,5,8], 'learn_rate':[0.01,0.1,0.05]}
 gs = H2OGridSearch(h2o.estimators.gbm.H2OGradientBoostingEstimator(distribution='gaussian'), hyper_params=hyper_parameters)
 gs.train(y = "temp", x = feature_list, training_frame = train, validation_frame = val)
-gs.show() #rank by validation error
+outputFile = open('log.txt', 'a')
+sys.stdout = outputFile
+print "==== grid search ===="
+print gs
+outputFile.close()
