@@ -1,14 +1,16 @@
 import csv
 import h2o
-# file1 = ['/Users/Pengfei/Documents/data/Xheader.csv','/Users/Pengfei/Documents/data/X1940.csv','/Users/Pengfei/Documents/data/X2016.csv']
-file2 = ['/Users/Pengfei/Documents/data/Xheader.csv','/Users/Pengfei/Documents/data/X1940.csv','/Users/Pengfei/Documents/data/X2016.csv']
-# file1 = ['D:\\Document\\data\\Xheader.csv', 'D:\\Document\\data\\X2016.csv']
+
+filepath = '/Users/Pengfei/Documents/data/'
+filelist =[ filepath+'Xheader.csv' ]
+for year in range(2015,2017):
+	filelist.append(filepath+'X'+str(year)+'.csv')
 
 # Initialize H2O
 h2o.init()
 
 # Load data from files
-data = h2o.import_file(file2)
+data = h2o.import_file(filelist)
 
 ##############data processing##################
 # Convert Boolean data to categorical
