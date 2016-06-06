@@ -48,6 +48,7 @@ data = data.drop('MonthDay')
 
 # Remove entries with missing temperature data
 data[data['temp']>9999,'temp'] = None
+data = data.na_omit()
 
 # Remove missing data
 data[data['dewpoint']>9999,'dewpoint'] = None
@@ -77,23 +78,25 @@ feature_list.remove('min temp')
 # Training Models
 gbm = h2o.estimators.gbm.H2OGradientBoostingEstimator(model_id='gbm1', distribution='gaussian')
 gbm.train(y = "temp", x = feature_list, training_frame = train, validation_frame = val)
+print "==== Gradient Boosting ===="
+print gbm
 
 rf = h2o.estimators.random_forest.H2ORandomForestEstimator(model_id='rf1')
 rf.train(y = "temp", x = feature_list, training_frame = train, validation_frame = val)
+print "==== Random Forest ===="
+print rf
+
 
 #deep learning is extremely slow, might not include it in the big data version
 dl = h2o.estimators.deeplearning.H2ODeepLearningEstimator(model_id='dl1')
 dl.train(y = "temp", x = feature_list, training_frame = train, validation_frame = val)
+print "==== Deep Learning ===="
+print dl
 
 glm = h2o.estimators.glm.H2OGeneralizedLinearEstimator(model_id='glm1')
 glm.train(y = "temp", x = feature_list, training_frame = train, validation_frame = val)
-
-# check model quality
-gbm.mse(train=True, valid=True)
-rf.mse(train=True, valid=True)
-dl.mse(train=True, valid=True)
-glm.mse(train=True, valid=True)
-
+print "==== Generalized Linear Model ===="
+print glm
 
 # Try grid search
 from h2o.grid.grid_search import H2OGridSearch
