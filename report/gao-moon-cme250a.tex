@@ -1,0 +1,177 @@
+\documentclass[letterpaper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{verbatim, listings, color}
+\usepackage{float}
+\usepackage[title]{appendix}
+\usepackage{epsfig}
+\usepackage{algorithm,algpseudocode}
+\usepackage{pdfpages}
+\usepackage{ifthen,changepage}
+\usepackage{empheq}
+\usepackage{bbm}
+
+% Source code settings
+\definecolor{lightgray}{rgb}{0.95,0.95,0.95}
+\definecolor{darkgreen}{rgb}{0,0.6,0}
+\lstset{language=python}
+\lstset{basicstyle=\ttfamily}
+\lstset{backgroundcolor=\color{lightgray}}
+\lstset{numbers=left, numberstyle=\tiny, stepnumber=1, numbersep=5pt}
+\lstset{keywordstyle=\color{blue}}
+\lstset{commentstyle=\color{darkgreen}}
+
+% Common macros
+\newcommand{\paren}[1]{{\left( #1 \right)}}
+\newcommand{\abs}[1]{{\left| #1 \right|}}
+\newcommand{\norm}[1]{{\left\lVert #1 \right\rVert}}
+\newcommand{\pd}[2]{{\frac{\partial #1}{\partial #2}}}
+\newcommand{\bhat}[1]{{\hat{\mathbf{#1}}}}
+\newcommand{\mat}[1]{{\left[\begin{matrix} #1 \end{matrix}\right]}}
+\newcommand{\smat}[1]{{\left[\begin{smallmatrix} #1 \end{smallmatrix}\right]}}
+\newcommand{\brac}[1]{{\left\lbrace #1 \right\rbrace}}
+\newcommand{\sbrac}[1]{{\left[ #1 \right]}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+% Alnboxed macro
+\makeatletter
+\newcommand\Alnboxed[1]{\let\bgroup{\romannumeral-`}% <increments M.C.>
+  \@Alnboxed#1\ENDDNE}%
+\def\@Alnboxed#1&#2\ENDDNE{\ifnum0=`{}\fi  % <decrements after parsing>
+  \settowidth\@tempdima{$\displaystyle#1{}$}%
+  \addtolength\@tempdima{\fboxsep}%
+  \addtolength\@tempdima{\fboxrule}%
+  \global\@tempdima=\@tempdima
+  \kern\@tempdima
+  &
+  \kern-\@tempdima
+  \boxed{#1#2}
+}
+\makeatother
+
+\begin{document}
+
+\title{Project Report\\\small CME 250A}
+\author{Pengfei Gao and Tim Moon}
+\date{June 8, 2016}
+\maketitle
+
+\section{Date Processing}
+We investigate several machine learning models to predict temperature
+based on date, location, and weather conditions. These models are
+trained with a data set from the National Oceanic and Atmospheric
+Administration. This data set ranges from 1929 to 2016 and consists of
+139 million daily weather reports from weather stations throughout the
+world. We are interested in predicting average temperature based on
+the following features:
+\begin{table}[H]
+  \centering
+  \begin{tabular}{c|ccc}
+    Feature & Type & Units & Comments \\ \hline
+    Station ID & Categorical & & Concatenation of DATSAV3 ID and WBAN ID \\
+    Year & Numeric & & \\
+    Month & Numeric & & \\
+    Day & Numeric & & \\
+    Dew Point & Numeric & \({}^\circ\text{F}\) & \\
+    Sea Level Pressure & Numeric & mbar & \\
+    Station Pressure & Numeric & mbar & \\
+    Visibility & Numeric & mi & \\
+    Mean Wind Speed & Numeric & kn & \\
+    Maximum Wind Seed & Numeric & kn & \\
+    Gust Speed & Numeric & kn \\
+    Precipitation & Numeric & in \\
+    Precipitation Report & Categorical & & Indicates procedure to measure precipitation \\
+    Fog & Categorical & & Boolean \\
+    Rain & Categorical & & Boolean \\
+    Snow & Categorical & & Boolean \\
+    Hail & Categorical & & Boolean \\
+    Thunder & Categorical & & Boolean \\
+    Tornado & Categorical & & Boolean 
+  \end{tabular}
+\end{table}
+
+\section{Implementation}
+The data set was randomly split into training (70\%) and validation
+(30\%) sets and the training set was used to train ordinary least
+squares, generalized linear, gradient boosting, and random forest
+estimators. This was implemented with H2O to allow for quick
+prototyping. In particular, H2O implements distributed data structures
+and algorithms, allowing us to easily leverage parallel computer
+architectures. Experiments were performed using four EC2 instances
+from Amazon Web Services.
+
+\section{Results}
+The mean squared errors for each method are reported below:
+\begin{table}[H]
+  \centering
+  \begin{tabular}{c|cccc}
+    Model & Train MSE & Train \(R^2\) & Validation MSE & Validation \(R^2\) \\ \hline
+    Ordinary Least Squares & 52.7 & 0.91 & 52.7 & 0.91 \\
+    Generalized Linear Model & 99.7 & 0.83 & 99.6 & 0.83\\
+    Gradient Boosting & 138.0 & 0.76 & 137.8 & 0.76 \\
+    Random Forest & 45.3 & 0.92 & 43.8 & 0.92
+  \end{tabular}
+\end{table}
+\noindent
+We see that the random forest method yields the best performance. We
+hypothesize that the gradient boosting method struggled since the data
+set exhibits behavior that is too complicated to be captured by
+shallow trees. Although the performance is improved by incorporating
+multiple trees, it may take an excessive number to achieve a good
+model. We also note that ordinary least squares outperformed the
+generalized linear model, likely since it used 26716 predictors
+compared to the generalized linear model's 28.\footnote{Recall that
+  categorical features must be converted to multiple numerical
+  features before applying a generalized linear model. Thus, it
+  appears that the generalized linear model discarded most of the
+  information involving station ID.} Inspecting the random forest, we
+find that the most important features are as follows:
+\begin{table}[H]
+  \centering
+  \begin{tabular}{c|c}
+    Feature & Scaled Importance \\ \hline
+    Dew Point & 1 \\
+    Station ID & 0.16 \\
+    Snow & 0.12 \\
+    Sea Level Pressure & 0.09 \\
+    Month & 0.08
+  \end{tabular}
+\end{table}
+\noindent
+Dew point is a measure of humidity, which indicates that temperature
+is very sensitive to humidity.  The standardized coefficients computed
+by ordinary least squares are as follows (excluding non-Boolean
+categorical features):
+\begin{table}[H]
+  \centering
+  \begin{tabular}{c|c}
+    Feature & Standardized Coefficient \\ \hline
+    Year & 0.576 \\
+    Month & 0.0760 \\
+    Day & 0.0025 \\
+    Dew Point & 20.5 \\
+    Sea Level Pressure & -1.69 \\
+    Station Pressure & 0.0035 \\
+    Visibility & 1.377 \\
+    Mean Wind Speed & 0.244  \\
+    Max Wind Speed & 0.449 \\
+    Gust Speed & -0.467 \\
+    Precipitation & -0.436 \\
+    Snow Depth & -0.424 \\
+    Fog & -3.04 \\
+    Rain & -3.14 \\
+    Snow & -5.29 \\
+    Hail & 1.23 \\
+    Thunder & -0.07 \\
+    Tornado & -1.10
+  \end{tabular}
+\end{table}
+\noindent Observe that the temperature is positively correlated with
+the year, which is suggestive of global warming.
+
+\appendices
+\section{Python Script} \label{appendix:python}
+\lstinputlisting{../src/main.py}
+
+\end{document}
