@@ -116,22 +116,35 @@ The mean squared errors for each method are reported below:
 \end{table}
 \noindent
 We see that the random forest method yields the best performance. We
-hypothesize that the gradient boosting method struggled since the data
-set exhibits behavior that is too complicated to be captured by
-shallow trees. Although the performance is improved by incorporating
-multiple trees, it may take an excessive number to achieve a good
-model. We ran a 
-
-
-
-We also note that ordinary least squares outperformed the
-generalized linear model, likely since it used 26716 predictors
-compared to the generalized linear model's 28.\footnote{Recall that
-  categorical features must be converted to multiple numerical
-  features before applying a generalized linear model. Thus, it
-  appears that the generalized linear model discarded most of the
-  information involving station ID.} Inspecting the random forest, we
-find that the most important features are as follows:
+also note that ordinary least squares outperformed the generalized
+linear model, likely since it used 26716 predictors compared to the
+generalized linear model's 28.\footnote{Recall that categorical
+  features must be converted to multiple numerical features before
+  applying a generalized linear model. Thus, it appears that the
+  generalized linear model discarded most of the information involving
+  station ID.}  We hypothesize that the gradient boosting method
+struggled because the data set exhibits behavior that is too
+complicated to be captured by shallow trees. Although the performance
+can improve by incorporating more trees, it may take an excessive
+number to achieve a good model.  To investigate this, we performed a
+hyperparameter search with the gradient boosting method:
+\begin{table}[H]
+  \centering
+  \begin{tabular}{cc|c}
+    Maximum Tree Depth & Learning Rate & Residual Deviance \\ \hline
+    5 & 0.1 & 137.8 \\
+    5 & 0.05 & 138.1 \\
+    3 & 0.1 & 146.4 \\
+    3 & 0.05 & 146.6 \\
+    5 & 0.01 & 299.0 \\
+    3 & 0.01 & 310.6
+  \end{tabular}
+\end{table}
+\noindent
+We see that the performance tends to improve as the trees become
+deeper, consistent with our hypothesis. In addition, the performance
+increases as the learning rate becomes larger.  Inspecting the random
+forest, we find that the most important features are as follows:
 \begin{table}[H]
   \centering
   \begin{tabular}{c|c}
@@ -174,6 +187,7 @@ categorical features):
 \end{table}
 \noindent Observe that the temperature is positively correlated with
 the year, which is suggestive of global warming.
+
 
 \appendices
 \section{Python Script} \label{appendix:python}
