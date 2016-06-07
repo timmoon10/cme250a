@@ -95,7 +95,8 @@ the following features:
 The data set was randomly split into training (70\%) and validation
 (30\%) sets and the training set was used to train ordinary least
 squares, generalized linear, gradient boosting, and random forest
-estimators. This was implemented with H2O to allow for quick
+estimators. We also tried a grid search for hyper-parameters of gradient boosting algorithm. 
+This was implemented with H2O to allow for quick
 prototyping. In particular, H2O implements distributed data structures
 and algorithms, allowing us to easily leverage parallel computer
 architectures. Experiments were performed using four EC2 instances
@@ -119,7 +120,11 @@ hypothesize that the gradient boosting method struggled since the data
 set exhibits behavior that is too complicated to be captured by
 shallow trees. Although the performance is improved by incorporating
 multiple trees, it may take an excessive number to achieve a good
-model. We also note that ordinary least squares outperformed the
+model. We ran a 
+
+
+
+We also note that ordinary least squares outperformed the
 generalized linear model, likely since it used 26716 predictors
 compared to the generalized linear model's 28.\footnote{Recall that
   categorical features must be converted to multiple numerical
